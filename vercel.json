@@ -10,5 +10,12 @@
     "env": {
       "NEXT_PUBLIC_GEMINI_API_KEY": "AIzaSyA5laFKVZJKJipSVdwM-9zIEZnqNxTtKkI"
     }
-  }
+  },
+  "git": {
+    "deploymentEnabled": {
+      "master": true
+    }
+  },
+  "buildCommand": "npm run build",
+  "installCommand": "npm install --legacy-peer-deps"
 } 
