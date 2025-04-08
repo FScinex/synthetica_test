@@ -6,13 +6,19 @@ export function useSpeech() {
   const [error, setError] = useState<string | null>(null);
   const speakingRef = useRef(false);
   const currentMessageRef = useRef<string | null>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Limpa qualquer fala pendente quando o componente é desmontado
   useEffect(() => {
     return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
       if (speakingRef.current) {
         stopSpeaking();
       }
+      speakingRef.current = false;
+      currentMessageRef.current = null;
     };
   }, []);
 
@@ -22,22 +28,27 @@ export function useSpeech() {
       return;
     }
 
-    // Evita reproduzir a mesma mensagem novamente
-    if (text === currentMessageRef.current) {
-      console.log('Mensagem já em reprodução:', text);
-      return;
-    }
-
     try {
+      // Limpa timeout anterior se existir
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+
       // Para qualquer fala anterior
       if (speakingRef.current) {
         stopSpeaking();
       }
 
+      // Reseta estados
       currentMessageRef.current = text;
       setIsSpeaking(true);
       speakingRef.current = true;
       setError(null);
+
+      // Pequeno delay antes de iniciar nova fala
+      await new Promise(resolve => {
+        timeoutRef.current = setTimeout(resolve, 100);
+      });
 
       console.log('Iniciando processo de fala...');
       await speak(text);
@@ -56,6 +67,10 @@ export function useSpeech() {
       console.error('Erro detalhado no hook useSpeech:', err);
       setError(errorMessage);
     } finally {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
       setIsSpeaking(false);
       speakingRef.current = false;
       currentMessageRef.current = null;
@@ -63,6 +78,10 @@ export function useSpeech() {
   }, []);
 
   const handleStop = useCallback(() => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
     stopSpeaking();
     setIsSpeaking(false);
     speakingRef.current = false;
@@ -70,6 +89,10 @@ export function useSpeech() {
   }, []);
 
   const clearHistory = useCallback(() => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
     currentMessageRef.current = null;
   }, []);
 

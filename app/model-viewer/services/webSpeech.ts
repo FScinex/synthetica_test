@@ -138,6 +138,17 @@ export function speak(text: string): Promise<void> {
 export function stopSpeaking(): void {
   if (window.speechSynthesis) {
     window.speechSynthesis.cancel();
+    // Força a parada da síntese de voz
+    window.speechSynthesis.resume();
     currentUtterance = null;
+    isProcessing = false;
+    speechQueue.length = 0;
   }
+}
+
+// Adiciona um listener global para garantir que a síntese de voz seja interrompida
+if (typeof window !== 'undefined') {
+  window.addEventListener('beforeunload', () => {
+    stopSpeaking();
+  });
 } 
